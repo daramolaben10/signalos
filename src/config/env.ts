@@ -18,6 +18,14 @@ const envSchema = z.object({
   X_ACCESS_TOKEN: z.string().optional(),
   X_ACCESS_SECRET: z.string().optional(),
   DEFAULT_USER_ID: z.string().uuid(),
+  DAILY_GENERATOR_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+  DAILY_GENERATOR_CRON: z.string().min(1).default('0 9 * * *'),
+  DAILY_GENERATOR_TIMEZONE: z.string().min(1).default('Europe/London'),
+  DAILY_GENERATOR_TOPIC: z.string().min(1).default('evergreen systems, incentives, and technology'),
+  DAILY_GENERATOR_POST_COUNT: z.coerce.number().int().min(1).max(25).default(10),
   PORT: z.coerce.number().int().positive().default(3000)
 }).superRefine((value, ctx) => {
   if (!value.OPENAI_API_KEY && !value.DEEPSEEK_API_KEY) {

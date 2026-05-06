@@ -23,7 +23,8 @@ Fill in `.env`:
 ```bash
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
-OPENAI_API_KEY=
+DEEPSEEK_API_KEY=
+# OPENAI_API_KEY=
 TELEGRAM_BOT_TOKEN=
 X_API_KEY=
 X_API_SECRET=
@@ -31,6 +32,13 @@ X_ACCESS_TOKEN=
 X_ACCESS_SECRET=
 DEFAULT_USER_ID=
 PORT=3000
+
+# Optional daily draft generation.
+DAILY_GENERATOR_ENABLED=false
+DAILY_GENERATOR_CRON=0 9 * * *
+DAILY_GENERATOR_TIMEZONE=Europe/London
+DAILY_GENERATOR_TOPIC=evergreen systems, incentives, and technology
+DAILY_GENERATOR_POST_COUNT=10
 ```
 
 ## Supabase Schema
@@ -96,7 +104,7 @@ Generate drafts:
 ```bash
 curl -X POST http://localhost:3000/generate \
   -H "content-type: application/json" \
-  -d '{"topic":"leverage and decision-making"}'
+  -d '{"topic":"leverage and decision-making","count":10}'
 ```
 
 Health check:
@@ -118,6 +126,19 @@ docker run --env-file .env -p 3000:3000 signalos
 2. Add the environment variables from `.env.example`.
 3. Ensure Railway runs `npm run build` and starts with `npm start`.
 4. Set the Telegram webhook to `https://YOUR_RAILWAY_DOMAIN/telegram/webhook`.
+
+## Daily Generation
+
+SignalOS can automatically generate drafts every day while keeping publishing human-approved. Enable it with:
+
+```bash
+DAILY_GENERATOR_ENABLED=true
+DAILY_GENERATOR_CRON=0 9 * * *
+DAILY_GENERATOR_TIMEZONE=Europe/London
+DAILY_GENERATOR_POST_COUNT=10
+```
+
+At the scheduled time, SignalOS generates 10 drafts, stores them in Supabase, and sends them to Telegram. Nothing posts to X until you tap Approve.
 
 ## Notes
 

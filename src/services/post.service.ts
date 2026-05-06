@@ -58,9 +58,9 @@ async function createDraft(content: string, riskScore: number): Promise<Post> {
   return data;
 }
 
-export async function generateDraftsForApproval(topic?: string): Promise<GenerateDraftsResult> {
+export async function generateDraftsForApproval(topic?: string, count = 5): Promise<GenerateDraftsResult> {
   const chatId = await getDefaultTelegramChatId();
-  const generated = await generatePosts(topic);
+  const generated = await generatePosts(topic, count);
   const created: Post[] = [];
   const blocked: GenerateDraftsResult['blocked'] = [];
 

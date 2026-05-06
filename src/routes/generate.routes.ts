@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { generateDraftsForApproval } from '../services/post.service.js';
 
 const generateBodySchema = z.object({
-  topic: z.string().trim().min(1).max(200).optional()
+  topic: z.string().trim().min(1).max(200).optional(),
+  count: z.number().int().min(1).max(25).optional()
 });
 
 export async function generateRoutes(app: FastifyInstance): Promise<void> {
@@ -16,7 +17,7 @@ export async function generateRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
-    const result = await generateDraftsForApproval(parsed.data.topic);
+    const result = await generateDraftsForApproval(parsed.data.topic, parsed.data.count);
 
     return {
       ok: true,

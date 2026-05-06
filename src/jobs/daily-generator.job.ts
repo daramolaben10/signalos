@@ -1,7 +1,8 @@
 import { generateDraftsForApproval } from '../services/post.service.js';
 
-export async function runDailyGenerator(topic = 'evergreen systems, incentives, and technology'): Promise<void> {
-  await generateDraftsForApproval(topic);
+export async function runDailyGenerator(
+  topic = 'evergreen systems, incentives, and technology',
+  count = 10
+): Promise<void> {
+  await generateDraftsForApproval(topic, count);
 }
-
-// TODO: Wire this into Railway cron, GitHub Actions, or another scheduler when ready.

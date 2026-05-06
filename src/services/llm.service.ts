@@ -37,19 +37,19 @@ Rules:
 - no marketing-only posts
 - each post must be under 280 characters
 - each post must contain a non-obvious insight
-- write 5 options`;
+- write the requested number of options`;
 
-function parseGeneratedPosts(raw: string): string[] {
+function parseGeneratedPosts(raw: string, count: number): string[] {
   return raw
     .split('\n')
     .map((line) => line.replace(/^\s*(?:[-*]|\d+[.)])\s*/, '').trim())
     .filter(Boolean)
     .map((post) => post.replace(/^["']|["']$/g, '').trim())
     .filter((post) => post.length > 0)
-    .slice(0, 5);
+    .slice(0, count);
 }
 
-export async function generatePosts(topic?: string): Promise<string[]> {
+export async function generatePosts(topic?: string, count = 5): Promise<string[]> {
   const topicLine = topic ? `Topic: ${topic}` : 'Topic: choose a timely, evergreen systems idea.';
 
   const response = await openai.chat.completions.create({
@@ -59,7 +59,7 @@ export async function generatePosts(topic?: string): Promise<string[]> {
       { role: 'system', content: systemPrompt },
       {
         role: 'user',
-        content: `${topicLine}\n\nReturn exactly 5 posts, one per line.`
+        content: `${topicLine}\n\nReturn exactly ${count} posts, one per line.`
       }
     ]
   });
@@ -69,7 +69,7 @@ export async function generatePosts(topic?: string): Promise<string[]> {
     throw new Error(`${provider} returned no generated content.`);
   }
 
-  const posts = parseGeneratedPosts(content).filter((post) => post.length <= 280);
+  const posts = parseGeneratedPosts(content, count).filter((post) => post.length <= 280);
   if (posts.length === 0) {
     throw new Error(`${provider} returned no posts under 280 characters.`);
   }
