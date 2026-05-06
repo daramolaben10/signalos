@@ -31,9 +31,16 @@ export async function telegramRoutes(app: FastifyInstance): Promise<void> {
     }
 
     if (parsed.action === 'approve') {
-      await approvePost(parsed.postId);
-      await answerCallbackQuery(callback.id, 'Approved and published to X.');
-      return { ok: true, decision: 'approved' };
+      try {
+        await approvePost(parsed.postId);
+        await answerCallbackQuery(callback.id, 'Approved and published to X.');
+        return { ok: true, decision: 'approved' };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown publishing failure.';
+        request.log.error(error);
+        await answerCallbackQuery(callback.id, `Approved, but publishing failed: ${message.slice(0, 140)}`);
+        return { ok: false, decision: 'approved', error: message };
+      }
     }
 
     await rejectPost(parsed.postId);

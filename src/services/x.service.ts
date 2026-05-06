@@ -1,4 +1,9 @@
-import { TwitterApi, type TwitterApiReadWrite } from 'twitter-api-v2';
+import {
+  TwitterApi,
+  type TweetV1,
+  type TweetV2PostTweetResult,
+  type TwitterApiReadWrite
+} from 'twitter-api-v2';
 import { env } from '../config/env.js';
 
 export type PublishResult = {
@@ -32,8 +37,12 @@ export async function publishPost(content: string): Promise<PublishResult> {
     throw new Error('X posts must be 280 characters or fewer.');
   }
 
-  const result = await callXApi(() => getXClient().v2.tweet(content));
-  const id = result.data.id;
+  const client = getXClient();
+  const result = await callXApi<TweetV2PostTweetResult | TweetV1>(
+    () => client.v2.tweet(content),
+    () => client.v1.tweet(content)
+  );
+  const id = isTweetV2Result(result) ? result.data.id : result.id_str;
 
   if (!id) {
     throw new Error('X API did not return a post id.');
@@ -42,12 +51,34 @@ export async function publishPost(content: string): Promise<PublishResult> {
   return { id };
 }
 
-async function callXApi<T>(operation: () => Promise<T>): Promise<T> {
+function isTweetV2Result(result: TweetV2PostTweetResult | TweetV1): result is TweetV2PostTweetResult {
+  return 'data' in result;
+}
+
+async function callXApi<T>(
+  operation: () => Promise<T>,
+  fallback?: () => Promise<T>
+): Promise<T> {
   try {
     return await operation();
   } catch (error) {
+    if (fallback && isAuthOrPermissionError(error)) {
+      try {
+        return await fallback();
+      } catch (fallbackError) {
+        throw new Error(
+          `X API publish failed: v2=${formatXError(error)} | v1=${formatXError(fallbackError)}`
+        );
+      }
+    }
+
     throw new Error(`X API publish failed: ${formatXError(error)}`);
   }
+}
+
+function isAuthOrPermissionError(error: unknown): boolean {
+  const details = error as { code?: number };
+  return details.code === 401 || details.code === 403;
 }
 
 function formatXError(error: unknown): string {
