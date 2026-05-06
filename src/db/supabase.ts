@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import type { WebSocketLikeConstructor } from '@supabase/realtime-js';
+import WebSocket from 'ws';
 import { env } from '../config/env.js';
 
 export type PostStatus = 'draft' | 'approved' | 'rejected' | 'posted' | 'failed';
@@ -28,6 +30,9 @@ export const supabase = createClient(
     auth: {
       persistSession: false,
       autoRefreshToken: false
+    },
+    realtime: {
+      transport: WebSocket as unknown as WebSocketLikeConstructor
     }
   }
 );
