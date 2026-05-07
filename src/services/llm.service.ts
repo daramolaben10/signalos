@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { env } from '../config/env.js';
+import type { AgentSettings } from './settings.service.js';
 
 const provider = env.LLM_PROVIDER ?? (env.DEEPSEEK_API_KEY ? 'deepseek' : 'openai');
 const apiKey = provider === 'deepseek' ? env.DEEPSEEK_API_KEY : env.OPENAI_API_KEY;
@@ -14,30 +15,11 @@ const openai = new OpenAI({
   baseURL: provider === 'deepseek' ? 'https://api.deepseek.com' : undefined
 });
 
-const systemPrompt = `You are writing for a sharp systems thinker.
-Style: compressed, high-signal, philosophical, direct.
-Inspired by Naval Ravikant and Marc Andreessen, but do not imitate them directly.
-
-Themes:
-- leverage
-- incentives
-- wealth
-- power
-- technology
-- systems
-- decision-making
-- capital
-- human behaviour
-
-Rules:
-- no emojis
-- no hashtags
-- no fluff
-- no generic motivation
-- no marketing-only posts
-- each post must be under 280 characters
-- each post must contain a non-obvious insight
-- write the requested number of options`;
+export type GeneratePostsOptions = {
+  topic?: string;
+  count?: number;
+  settings: AgentSettings;
+};
 
 function parseGeneratedPosts(raw: string, count: number): string[] {
   return raw
@@ -49,14 +31,18 @@ function parseGeneratedPosts(raw: string, count: number): string[] {
     .slice(0, count);
 }
 
-export async function generatePosts(topic?: string, count = 5): Promise<string[]> {
-  const topicLine = topic ? `Topic: ${topic}` : 'Topic: choose a timely, evergreen systems idea.';
+export async function generatePosts(options: GeneratePostsOptions): Promise<string[]> {
+  const count = options.count ?? options.settings.daily_post_count;
+  const topics = options.settings.topics.join(', ');
+  const topicLine = options.topic
+    ? `Topic: ${options.topic}`
+    : `Topic: choose from these interests: ${topics}`;
 
   const response = await openai.chat.completions.create({
     model,
     temperature: 0.85,
     messages: [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: buildSystemPrompt(options.settings) },
       {
         role: 'user',
         content: `${topicLine}\n\nReturn exactly ${count} posts, one per line.`
@@ -75,4 +61,27 @@ export async function generatePosts(topic?: string, count = 5): Promise<string[]
   }
 
   return posts;
+}
+
+function buildSystemPrompt(settings: AgentSettings): string {
+  return `You are writing as this persona: ${settings.persona_name}.
+
+Persona:
+${settings.persona_description}
+
+Topics of interest:
+${settings.topics.map((topic) => `- ${topic}`).join('\n')}
+
+Style rules:
+${settings.style_rules}
+
+Hard rules:
+- no emojis
+- no hashtags
+- no fluff
+- no generic motivation
+- no marketing-only posts
+- each post must be under 280 characters
+- each post must contain a non-obvious insight
+- write the requested number of options`;
 }

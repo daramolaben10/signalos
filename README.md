@@ -31,6 +31,7 @@ X_API_SECRET=
 X_ACCESS_TOKEN=
 X_ACCESS_SECRET=
 DEFAULT_USER_ID=
+ADMIN_TOKEN=
 PORT=3000
 
 # Optional daily draft generation.
@@ -99,6 +100,12 @@ Publishing is isolated in `src/services/x.service.ts` so future platform adapter
 npm run dev
 ```
 
+Settings interface:
+
+```text
+http://localhost:3000/admin?token=YOUR_ADMIN_TOKEN
+```
+
 Generate drafts:
 
 ```bash
@@ -127,6 +134,12 @@ docker run --env-file .env -p 3000:3000 signalos
 3. Ensure Railway runs `npm run build` and starts with `npm start`.
 4. Set the Telegram webhook to `https://YOUR_RAILWAY_DOMAIN/telegram/webhook`.
 
+Open the production settings interface:
+
+```text
+https://YOUR_RAILWAY_DOMAIN/admin?token=YOUR_ADMIN_TOKEN
+```
+
 ## Daily Generation
 
 SignalOS can automatically generate drafts every day while keeping publishing human-approved. Enable it with:
@@ -139,6 +152,8 @@ DAILY_GENERATOR_POST_COUNT=10
 ```
 
 At the scheduled time, SignalOS generates 10 drafts, stores them in Supabase, and sends them to Telegram. Nothing posts to X until you tap Approve.
+
+You can change persona, topics, daily count, schedule, timezone, and risk threshold from `/admin`.
 
 ## Notes
 

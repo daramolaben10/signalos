@@ -4,6 +4,7 @@ import { generatePosts } from './llm.service.js';
 import { scorePostRisk } from './safety.service.js';
 import { sendApprovalMessage } from './telegram.service.js';
 import { publishPost } from './x.service.js';
+import { getAgentSettings } from './settings.service.js';
 
 export type GenerateDraftsResult = {
   created: Post[];
@@ -58,9 +59,14 @@ async function createDraft(content: string, riskScore: number): Promise<Post> {
   return data;
 }
 
-export async function generateDraftsForApproval(topic?: string, count = 5): Promise<GenerateDraftsResult> {
+export async function generateDraftsForApproval(topic?: string, count?: number): Promise<GenerateDraftsResult> {
+  const settings = await getAgentSettings();
   const chatId = await getDefaultTelegramChatId();
-  const generated = await generatePosts(topic, count);
+  const generated = await generatePosts({
+    topic,
+    count: count ?? settings.daily_post_count,
+    settings
+  });
   const created: Post[] = [];
   const blocked: GenerateDraftsResult['blocked'] = [];
 
@@ -68,7 +74,7 @@ export async function generateDraftsForApproval(topic?: string, count = 5): Prom
     const risk = scorePostRisk(content);
     const draft = await createDraft(content, risk.score);
 
-    if (risk.score > 0.7) {
+    if (risk.score > settings.risk_threshold) {
       blocked.push({ content, riskScore: risk.score });
       continue;
     }
@@ -99,7 +105,8 @@ export async function approvePost(postId: string): Promise<Post> {
     throw new Error('Cannot approve a rejected post.');
   }
 
-  if (post.risk_score > 0.7) {
+  const settings = await getAgentSettings();
+  if (post.risk_score > settings.risk_threshold) {
     throw new Error('Post risk score is too high for approval.');
   }
 

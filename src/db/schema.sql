@@ -47,6 +47,29 @@ create table if not exists approval_logs (
   created_at timestamptz not null default now()
 );
 
+create table if not exists agent_settings (
+  user_id uuid primary key references users(id) on delete cascade,
+  persona_name text not null default 'Sharp Systems Thinker',
+  persona_description text not null default 'Compressed, high-signal, philosophical, direct. Inspired by systems thinkers, but original.',
+  style_rules text not null default 'No emojis. No hashtags. No fluff. No generic motivation. No marketing-only posts. Each post must contain a non-obvious insight.',
+  topics text[] not null default array[
+    'leverage',
+    'incentives',
+    'wealth',
+    'power',
+    'technology',
+    'systems',
+    'decision-making',
+    'capital',
+    'human behaviour'
+  ],
+  daily_post_count integer not null default 10 check (daily_post_count between 1 and 25),
+  schedule_cron text not null default '0 9 * * *',
+  timezone text not null default 'Europe/London',
+  risk_threshold numeric not null default 0.7 check (risk_threshold >= 0 and risk_threshold <= 1),
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists posts_user_id_idx on posts(user_id);
 create index if not exists posts_status_idx on posts(status);
 create index if not exists approval_logs_post_id_idx on approval_logs(post_id);

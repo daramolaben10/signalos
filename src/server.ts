@@ -5,6 +5,7 @@ import { generateRoutes } from './routes/generate.routes.js';
 import { healthRoutes } from './routes/health.routes.js';
 import { telegramRoutes } from './routes/telegram.routes.js';
 import { startDailyGeneratorScheduler } from './jobs/scheduler.js';
+import { adminRoutes } from './routes/admin.routes.js';
 
 export async function buildServer() {
   const app = Fastify({
@@ -18,6 +19,7 @@ export async function buildServer() {
   await app.register(healthRoutes);
   await app.register(generateRoutes);
   await app.register(telegramRoutes);
+  await app.register(adminRoutes);
   startDailyGeneratorScheduler(app.log);
 
   app.setErrorHandler((error, _request, reply) => {
