@@ -159,6 +159,11 @@ You can change persona, topics, daily count, schedule, timezone, and risk thresh
 
 Approved posts are queued and published at the configured posting gap. The admin draft queue can approve, reject, rewrite, and retry posts.
 
+## Documentation
+
+- [Operations checklist](docs/operations-checklist.md)
+- [Development log](docs/dev-log/2026-07-14.md)
+
 ## Notes
 
 - Posts with `risk_score > 0.7` are stored but not sent for Telegram approval.
